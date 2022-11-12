@@ -1,0 +1,38 @@
+name: Build QtApp CMake onWin
+
+on:
+  push:
+    tags:
+      - v*
+  workflow_dispatch:
+
+env:
+  targetName: qmake_action
+
+jobs:
+  Build-MSVC:
+    name: Build-MSVC
+    runs-on: windows-latest
+    
+    steps:
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2
+        with:
+          version: 5.13.2
+          target: desktop
+          arch: win64_msvc2017_64
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+          submodules: true
+      - name: Configure and compile
+        run: |
+          # Setup VS compiler
+          cmd.exe /c "call `"C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat`" && set > %temp%\vcvars.txt"
+          Get-Content "$env:temp\vcvars.txt" | Foreach-Object { if ($_ -match "^(.*?)=(.*)$") { Set-Content "env:\$($matches[1])" $matches[2] } }
+          md build
+          cd build
+          md msvc
+          cd msvc
+          cmake -G "Visual Studio 16 2019" -A x64 ../..
+          cmake --build . 

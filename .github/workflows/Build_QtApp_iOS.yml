@@ -1,0 +1,48 @@
+name: Build QtApp iOS
+on: 
+  push:
+    tags:
+      - v*
+  workflow_dispatch:
+  
+  
+jobs:
+  build:
+    name: Build
+    runs-on: macos-10.14
+    # 10.15
+    strategy:
+      matrix:
+        # qt_ver: [5.12.10, 5.15.2]
+        qt_ver: [5.12.10]
+        qt_target: [ios]
+        target_app: [qmake_action]
+    steps:
+      - name: Install Qt
+        # if: steps.cacheqt.outputs.cache-hit != 'true'
+        uses: jurplel/install-qt-action@v2.10.0
+        with:
+          # Version of Qt to install
+          version: ${{ matrix.qt_ver }}
+          # Target platform for build
+          target: ${{ matrix.qt_target }}
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: build ios
+        run: |
+          sudo xcode-select -s '/Applications/Xcode_10.3.app'
+          qmake -r -spec macx-ios-clang CONFIG+=release CONFIG+=iphoneos
+          make
+      - name: show filetrees
+        run: |
+          ls -R
+          mkdir ${{ matrix.target_app }}
+          mkdir ${{ matrix.target_app }}/Payload
+          cp -r Release-iphonesimulator/${{ matrix.target_app }}.app ${{ matrix.target_app }}/Payload/${{ matrix.target_app }}.app
+          cd ${{ matrix.target_app }}
+          zip -r ${{ matrix.target_app }}-${{ matrix.qt_ver }}-${{ matrix.xcode }}.ipa Payload
+      - uses: actions/upload-artifact@v1
+        with:
+          name: ${{ matrix.target_app }}-${{ matrix.qt_ver }}-${{ matrix.xcode }}.ipa
+          path: ${{ matrix.target_app }}/${{ matrix.target_app }}-${{ matrix.qt_ver }}-${{ matrix.xcode }}.ipa

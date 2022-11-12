@@ -1,0 +1,26 @@
+name: download archive.org py
+
+on: 
+  workflow_dispatch:
+  # push:
+ 
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.7
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+    - name: Update
+      run: |
+        python -m pip install -r r.txt
+        python3 download.archive.org.py -e wsl98501@163.com -p lyg98nsl -r 0 -u https://archive.org/details/ngc20000complete0000drey -f ngc20000complete0000drey.pdf
+     
+    - uses: actions/upload-artifact@v1
+      with:
+        name: Art
+        path: ./NGC_2000.0__the_complete_new_general_catalogue_and_index_catalogues_of_nebulae_and_star_clusters.pdf

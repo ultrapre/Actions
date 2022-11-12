@@ -1,0 +1,52 @@
+name: Build QtApp MacOS
+on: 
+  push:
+    tags:
+      - v*
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        qt_ver: [5.15.2]
+        qt_arch: [clang_64]
+        target_app: [qmake_action]
+    steps:
+      - name: Cache Qt
+        id: cache-qt
+        uses: actions/cache@v1
+        with:
+          path: ../Qt
+          key: ${{ runner.os }}-QtCache
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2
+        with:
+          # Version of Qt to install
+          version: ${{ matrix.qt_ver }}
+          # Target platform for build
+          # target: ${{ matrix.qt_target }}
+          # Architecture for Windows/Android
+          arch: ${{ matrix.qt_arch }}
+          modules: 'qtcharts qtwebengine qtscript'
+          cached: ${{ steps.cache-qt.outputs.cache-hit }}
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+          
+      - name: build macos
+        run: |
+          qmake
+          make
+          ls -l
+      - name: Deploy app
+        run: |
+          macdeployqt ${{ matrix.target_app }}.app -dmg
+          ls -l
+      - name: Upload artifact
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: $${{ matrix.target_app }}-${{ matrix.qt_arch }}
+          path: ${{ matrix.target_app }}.dmg

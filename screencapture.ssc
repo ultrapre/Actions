@@ -1,0 +1,8 @@
+StelMovementMgr.zoomTo(180) ;
+// 緯度・経度を指定
+core.setObserverLocation(35.685, 139.751, 0);
+StelMovementMgr.lookEast();
+core.wait(0.0);
+// 'hosizora.png'という名前でスクリーンショットが保存される
+core.screenshot('hosizora', false, '', true);
+core.quitStellarium();
