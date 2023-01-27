@@ -11,8 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    
-    - name:
+    - name: Actions Runner-Image 5879
+      run: |
+         $sdkRoot = "C:\Android\android-sdk"
+         $sdkManager = "$sdkRoot\cmdline-tools\latest\bin\sdkmanager.bat"
+         $androidPackages = Get-AndroidPackages -AndroidSDKManagerPath $sdkManager
+         $ndkDefaultVersion = ($androidPackages | Where-Object { $_ -match "ndk;23" }).Split(';')[1]
+         $ndkRoot = "$sdkRoot\ndk-bundle"
+         New-Item -Path $ndkRoot -ItemType SymbolicLink -Value "$sdkRoot\ndk\$ndkDefaultVersion"
+         setx ANDROID_NDK_HOME $ndkRoot /M
+         setx ANDROID_NDK_PATH $ndkRoot /M
+         setx ANDROID_NDK_ROOT $ndkRoot /M
+         (Get-Content -Encoding UTF8 "${ndkRoot}\ndk-build.cmd").replace('%~dp0\build\ndk-build.cmd','"%~dp0\build\ndk-build.cmd"')|Set-Content -Encoding UTF8 "${ndkRoot}\ndk-build.cmd"
+    - name: Install Qt
       uses: jurplel/install-qt-action@v2
       with:
         target: 'android'
