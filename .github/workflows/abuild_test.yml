@@ -13,16 +13,18 @@ jobs:
     steps:
     - name: Actions Runner-Image 5879
       run: |
-         $sdkRoot = "C:\Android\android-sdk"
-         $sdkManager = "$sdkRoot\cmdline-tools\latest\bin\sdkmanager.bat"
-         $androidPackages = Get-AndroidPackages -AndroidSDKManagerPath $sdkManager
-         $ndkDefaultVersion = ($androidPackages | Where-Object { $_ -match "ndk;23" }).Split(';')[1]
-         $ndkRoot = "$sdkRoot\ndk-bundle"
-         New-Item -Path $ndkRoot -ItemType SymbolicLink -Value "$sdkRoot\ndk\$ndkDefaultVersion"
-         setx ANDROID_NDK_HOME $ndkRoot /M
-         setx ANDROID_NDK_PATH $ndkRoot /M
-         setx ANDROID_NDK_ROOT $ndkRoot /M
-         (Get-Content -Encoding UTF8 "${ndkRoot}\ndk-build.cmd").replace('%~dp0\build\ndk-build.cmd','"%~dp0\build\ndk-build.cmd"')|Set-Content -Encoding UTF8 "${ndkRoot}\ndk-build.cmd"
+        function get_full_ndk_version {
+            majorVersion=$1
+            ndkFullVersion=$($SDKMANAGER --list | grep "ndk;${majorVersion}.*" | awk '{gsub("ndk;", ""); print $1}' | sort -V | tail -n1)
+            echo "$ndkFullVersion"
+        }
+        ANDROID_ROOT=/usr/local/lib/android
+        ANDROID_SDK_ROOT=${ANDROID_ROOT}/sdk
+        ANDROID_NDK_ROOT=${ANDROID_SDK_ROOT}/ndk-bundle
+        SDKMANAGER=${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager
+        ndkDefaultFullVersion=$(get_full_ndk_version "23")
+        ln -sf $ANDROID_SDK_ROOT/ndk/$ndkDefaultFullVersion $ANDROID_NDK_ROOT
+
     - name: Install Qt
       uses: jurplel/install-qt-action@v2
       with:
